@@ -1,0 +1,32 @@
+<div class="page-wrapper-sm login-page">
+  <div class="login-card card card-elevated">
+    <div class="login-header">
+      <div class="pulse-dot pulse-dot-lg"></div>
+      <h1>Home<span>Compta</span></h1>
+      <p class="page-subtitle">Connexion</p>
+    </div>
+
+    <%= form_for(resource, as: resource_name, url: session_path(resource_name), html: { class: "compta-form" }) do |f| %>
+      <div class="form-group">
+        <%= f.label :email, "Email", class: "form-label" %>
+        <%= f.email_field :email, autofocus: true, autocomplete: "email", placeholder: "votre@email.com", class: "form-input" %>
+      </div>
+
+      <div class="form-group">
+        <%= f.label :password, "Mot de passe", class: "form-label" %>
+        <%= f.password_field :password, autocomplete: "current-password", placeholder: "••••••••", class: "form-input" %>
+      </div>
+
+      <% if devise_mapping.rememberable? %>
+        <div class="form-group form-group-check">
+          <%= f.check_box :remember_me, class: "form-check" %>
+          <%= f.label :remember_me, "Se souvenir de moi", class: "form-check-label" %>
+        </div>
+      <% end %>
+
+      <div class="form-actions">
+        <%= f.submit "Se connecter", class: "btn btn-primary btn-full" %>
+      </div>
+    <% end %>
+  </div>
+</div>

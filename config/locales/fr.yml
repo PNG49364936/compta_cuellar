@@ -1,0 +1,122 @@
+fr:
+  activerecord:
+    models:
+      operation: "Opération"
+      category: "Catégorie"
+      subcategory: "Sous-catégorie"
+    attributes:
+      operation:
+        amount: "Montant"
+        payment_date: "Date de paiement"
+        observation: "Observation"
+        category: "Catégorie"
+        subcategory: "Sous-catégorie"
+      category:
+        name: "Nom"
+        operation_type: "Type"
+      subcategory:
+        name: "Nom"
+        category: "Catégorie"
+    errors:
+      models:
+        operation:
+          attributes:
+            amount:
+              greater_than: "doit être supérieur à %{count}"
+            observation:
+              too_long: "est trop longue (maximum %{count} caractères)"
+            payment_date:
+              blank: "doit être renseignée"
+        category:
+          attributes:
+            name:
+              blank: "doit être renseigné"
+        subcategory:
+          attributes:
+            name:
+              blank: "doit être renseigné"
+  errors:
+    messages:
+      blank: "doit être renseigné"
+      invalid: "n'est pas valide"
+      too_long: "est trop long (maximum %{count} caractères)"
+  date:
+    formats:
+      default: "%d/%m/%Y"
+      short: "%d %b"
+      long: "%d %B %Y"
+    day_names:
+      - dimanche
+      - lundi
+      - mardi
+      - mercredi
+      - jeudi
+      - vendredi
+      - samedi
+    abbr_day_names:
+      - dim
+      - lun
+      - mar
+      - mer
+      - jeu
+      - ven
+      - sam
+    month_names:
+      - ~
+      - janvier
+      - février
+      - mars
+      - avril
+      - mai
+      - juin
+      - juillet
+      - août
+      - septembre
+      - octobre
+      - novembre
+      - décembre
+    abbr_month_names:
+      - ~
+      - jan.
+      - fév.
+      - mars
+      - avr.
+      - mai
+      - juin
+      - juil.
+      - août
+      - sept.
+      - oct.
+      - nov.
+      - déc.
+  time:
+    formats:
+      default: "%d/%m/%Y %H:%M"
+      short: "%d %b %H:%M"
+      long: "%d %B %Y %H:%M"
+  number:
+    currency:
+      format:
+        unit: "€"
+        delimiter: " "
+        separator: ","
+        precision: 2
+        format: "%n %u"
+    format:
+      separator: ","
+      delimiter: " "
+      precision: 2
+  helpers:
+    submit:
+      create: "Créer"
+      update: "Modifier"
+      submit: "Enregistrer"
+  devise:
+    sessions:
+      new:
+        sign_in: "Se connecter"
+      signed_in: "Connexion réussie."
+      signed_out: "Déconnexion réussie."
+    failure:
+      invalid: "Email ou mot de passe invalide."
+      unauthenticated: "Vous devez vous connecter pour accéder à cette page."

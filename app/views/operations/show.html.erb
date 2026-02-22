@@ -1,0 +1,47 @@
+<div class="page-wrapper-sm">
+  <h1>Détail de l'opération</h1>
+
+  <div class="card card-elevated operation-detail">
+    <div class="operation-detail-header">
+      <span class="operation-badge-lg <%= @operation.category.debit? ? 'badge-debit' : 'badge-credit' %>">
+        <%= @operation.category.debit? ? 'Dépense' : 'Revenu' %>
+      </span>
+      <span class="operation-amount-lg <%= @operation.category.debit? ? 'amount-debit' : 'amount-credit' %>">
+        <%= @operation.category.debit? ? '−' : '+' %><%= number_to_currency(@operation.amount, unit: "€", separator: ",", delimiter: " ", format: "%n %u") %>
+      </span>
+    </div>
+
+    <div class="detail-grid">
+      <div class="detail-item">
+        <span class="detail-label">Catégorie</span>
+        <span class="detail-value"><%= @operation.category.name %></span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Sous-catégorie</span>
+        <span class="detail-value"><%= @operation.subcategory.name %></span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Date de paiement</span>
+        <span class="detail-value"><%= l(@operation.payment_date, format: :long) %></span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Observation</span>
+        <span class="detail-value"><%= @operation.observation.present? ? @operation.observation : "—" %></span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Date de création</span>
+        <span class="detail-value"><%= l(@operation.created_at, format: :default) %></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="show-actions">
+    <%= link_to "Nouvelle opération", new_operation_path, class: "btn btn-primary" %>
+    <%= link_to "Modifier", edit_operation_path(@operation), class: "btn btn-secondary" %>
+    <%= link_to "Supprimer", operation_path(@operation), data: { turbo_method: :delete, turbo_confirm: "Êtes-vous sûr de vouloir supprimer cette opération ?" }, class: "btn btn-danger" %>
+    <% if params[:from_extraction].present? %>
+      <%= link_to "Retour à l'extraction", params[:from_extraction], class: "btn btn-secondary" %>
+    <% end %>
+    <%= link_to "Accueil", root_path, class: "btn btn-secondary" %>
+  </div>
+</div>

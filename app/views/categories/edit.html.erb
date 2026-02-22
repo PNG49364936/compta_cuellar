@@ -1,0 +1,35 @@
+<div class="page-wrapper-sm">
+  <h1>Modifier la catégorie</h1>
+
+  <div class="card card-elevated">
+    <%= form_with(model: @category, class: "compta-form") do |f| %>
+      <% if @category.errors.any? %>
+        <div class="errors-box">
+          <ul>
+            <% @category.errors.full_messages.each do |msg| %>
+              <li><%= msg %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <div class="form-group">
+        <%= f.label :name, "Nom", class: "form-label" %>
+        <%= f.text_field :name, class: "form-input" %>
+      </div>
+
+      <div class="form-group">
+        <%= f.label :operation_type, "Type", class: "form-label" %>
+        <%= f.select :operation_type, [["Dépense (débit)", "debit"], ["Revenu (crédit)", "credit"]], {}, class: "form-input" %>
+      </div>
+
+      <div class="form-actions">
+        <%= f.submit "Enregistrer", class: "btn btn-primary btn-full" %>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="back-link">
+    <%= link_to "← Retour aux catégories", categories_path %>
+  </div>
+</div>

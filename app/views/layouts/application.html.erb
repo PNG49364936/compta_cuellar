@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <title>Home Compta</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta charset="utf-8">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <%= stylesheet_link_tag "custom", "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body>
+    <header class="site-header" data-controller="mobile-nav">
+      <div class="site-header-inner">
+        <%= link_to root_path, class: "site-logo" do %>
+          <div class="pulse-dot"></div>
+          <span class="site-logo-text">Home<span>Compta</span></span>
+        <% end %>
+
+        <% if user_signed_in? %>
+          <button class="nav-toggle" data-action="click->mobile-nav#toggle" aria-label="Menu">
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+        <% end %>
+
+        <nav class="site-nav" data-mobile-nav-target="menu">
+          <% if user_signed_in? %>
+            <%= link_to "Accueil", root_path, data: { action: "click->mobile-nav#close" } %>
+            <%= link_to "Saisie", new_operation_path, data: { action: "click->mobile-nav#close" } %>
+            <%= link_to "Catégories", categories_path, data: { action: "click->mobile-nav#close" } %>
+            <%= link_to "Comptes", extractions_path, data: { action: "click->mobile-nav#close" } %>
+            <%= link_to "Déconnexion", destroy_user_session_path, data: { turbo_method: :delete, action: "click->mobile-nav#close" } %>
+          <% end %>
+        </nav>
+      </div>
+    </header>
+
+    <% if notice %>
+      <div style="max-width:1200px;margin:0 auto;padding:1rem 1.5rem 0;">
+        <div class="flash-notice">
+          <span>&#10003;</span> <%= notice %>
+        </div>
+      </div>
+    <% end %>
+    <% if alert %>
+      <div style="max-width:1200px;margin:0 auto;padding:1rem 1.5rem 0;">
+        <div class="flash-alert">
+          <span>&#9888;</span> <%= alert %>
+        </div>
+      </div>
+    <% end %>
+
+    <main>
+      <%= yield %>
+    </main>
+
+    <footer style="text-align:center;padding:2rem 1.5rem;color:var(--text-light);font-size:0.78rem;border-top:1px solid var(--border);margin-top:2rem;font-family:'Source Serif 4',serif;font-style:italic;">
+      Home Compta &mdash; Gestion comptable domestique
+    </footer>
+  </body>
+</html>

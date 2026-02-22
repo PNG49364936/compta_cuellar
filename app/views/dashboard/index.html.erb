@@ -1,0 +1,78 @@
+<div class="page-wrapper">
+  <div class="page-hero">
+    <h1>Home Compta</h1>
+    <p class="page-subtitle">Gestion comptable domestique</p>
+  </div>
+
+  <!-- Solde global -->
+  <div class="solde-card card-elevated">
+    <div class="solde-label">Solde global</div>
+    <div class="solde-amount <%= @solde >= 0 ? 'solde-positive' : 'solde-negative' %>">
+      <%= number_to_currency(@solde, unit: "€", separator: ",", delimiter: " ", format: "%n %u") %>
+    </div>
+    <div class="solde-details">
+      <span class="solde-detail credit">
+        <span class="solde-detail-label">Crédits</span>
+        <span class="solde-detail-value"><%= number_to_currency(@total_credits, unit: "€", separator: ",", delimiter: " ", format: "%n %u") %></span>
+      </span>
+      <span class="solde-detail debit">
+        <span class="solde-detail-label">Débits</span>
+        <span class="solde-detail-value"><%= number_to_currency(@total_debits, unit: "€", separator: ",", delimiter: " ", format: "%n %u") %></span>
+      </span>
+    </div>
+  </div>
+
+  <!-- Boutons d'action -->
+  <div class="action-buttons">
+    <%= link_to new_operation_path, class: "action-card" do %>
+      <div class="action-icon">+</div>
+      <div class="action-title">Nouvelle opération</div>
+      <div class="action-desc">Saisir une dépense ou un revenu</div>
+    <% end %>
+    <%= link_to categories_path, class: "action-card" do %>
+      <div class="action-icon">&#9776;</div>
+      <div class="action-title">Catégories</div>
+      <div class="action-desc">Gérer catégories et sous-catégories</div>
+    <% end %>
+    <%= link_to extractions_path, class: "action-card" do %>
+      <div class="action-icon">&#128200;</div>
+      <div class="action-title">Comptes</div>
+      <div class="action-desc">Consulter et imprimer les extractions</div>
+    <% end %>
+  </div>
+
+  <!-- 10 dernières opérations -->
+  <div class="section-block">
+    <h2>Dernières opérations</h2>
+
+    <% if @recent_operations.any? %>
+      <div class="operations-list">
+        <% @recent_operations.each_with_index do |op, i| %>
+          <%= link_to operation_path(op), class: "operation-row", style: "animation-delay: #{i * 0.05}s" do %>
+            <div class="operation-row-left">
+              <span class="operation-badge <%= op.category.debit? ? 'badge-debit' : 'badge-credit' %>">
+                <%= op.category.debit? ? '−' : '+' %>
+              </span>
+              <div class="operation-info">
+                <span class="operation-cat"><%= op.category.name %></span>
+                <span class="operation-subcat"><%= op.subcategory.name %></span>
+              </div>
+            </div>
+            <div class="operation-row-right">
+              <span class="operation-amount <%= op.category.debit? ? 'amount-debit' : 'amount-credit' %>">
+                <%= op.category.debit? ? '−' : '+' %><%= number_to_currency(op.amount, unit: "€", separator: ",", delimiter: " ", format: "%n %u") %>
+              </span>
+              <span class="operation-date"><%= l(op.payment_date, format: :default) %></span>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="empty-state">
+        <p class="empty-state-title">Aucune opération enregistrée</p>
+        <p class="empty-state-subtitle">Commencez par créer votre première opération</p>
+        <%= link_to "Nouvelle opération", new_operation_path, class: "btn btn-primary" %>
+      </div>
+    <% end %>
+  </div>
+</div>

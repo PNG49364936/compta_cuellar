@@ -1,0 +1,133 @@
+<div class="page-wrapper-lg" data-controller="print">
+  <div class="results-header">
+    <h1>Extraction — <%= @year %></h1>
+    <% if @months.any? %>
+      <p class="page-subtitle">
+        Mois : <%= @months.map { |m| I18n.l(Date.new(@year.to_i, m.to_i, 1), format: "%B").capitalize }.join(", ") %>
+      </p>
+    <% end %>
+  </div>
+
+  <!-- Résumé -->
+  <div class="extraction-summary">
+    <div class="summary-item">
+      <span class="summary-label">Total débits</span>
+      <span class="summary-value amount-debit"><%= number_to_currency(@total_debits, unit: "€", separator: ",", delimiter: " ", format: "%n %u") %></span>
+    </div>
+    <div class="summary-item">
+      <span class="summary-label">Total crédits</span>
+      <span class="summary-value amount-credit"><%= number_to_currency(@total_credits, unit: "€", separator: ",", delimiter: " ", format: "%n %u") %></span>
+    </div>
+    <div class="summary-item summary-solde">
+      <span class="summary-label">Solde</span>
+      <span class="summary-value <%= @solde >= 0 ? 'solde-positive' : 'solde-negative' %>"><%= number_to_currency(@solde, unit: "€", separator: ",", delimiter: " ", format: "%n %u") %></span>
+    </div>
+  </div>
+
+  <!-- Totaux par catégorie -->
+  <% if @totals_by_category.any? %>
+    <div class="section-block">
+      <h2>Total par catégorie</h2>
+      <div class="totals-grid">
+        <% @totals_by_category.each do |cat_name, total| %>
+          <div class="total-card">
+            <span class="total-cat-name"><%= cat_name %></span>
+            <span class="total-cat-value"><%= number_to_currency(total, unit: "€", separator: ",", delimiter: " ", format: "%n %u") %></span>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Totaux par mois -->
+  <% if @totals_by_month.any? %>
+    <div class="section-block">
+      <h2>Total par mois</h2>
+      <div class="totals-grid">
+        <% @totals_by_month.sort.each do |month_num, total| %>
+          <div class="total-card">
+            <span class="total-cat-name"><%= I18n.l(Date.new(@year.to_i, month_num.to_i, 1), format: "%B").capitalize %></span>
+            <span class="total-cat-value"><%= number_to_currency(total, unit: "€", separator: ",", delimiter: " ", format: "%n %u") %></span>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Tableau des opérations -->
+  <div class="section-block">
+    <h2><%= pluralize(@operations.count, "opération") %></h2>
+
+    <% if @operations.any? %>
+      <div class="table-wrapper">
+        <table class="results-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Catégorie</th>
+              <th>Sous-catégorie</th>
+              <th>Observation</th>
+              <th class="text-right">Montant</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @operations.each do |op| %>
+              <tr class="clickable-row" onclick="window.location='<%= operation_path(op, from_extraction: request.fullpath) %>'">
+                <td><%= l(op.payment_date, format: :default) %></td>
+                <td><%= op.category.name %></td>
+                <td><%= op.subcategory.name %></td>
+                <td><%= op.observation %></td>
+                <td class="text-right">
+                  <span class="<%= op.category.debit? ? 'amount-debit' : 'amount-credit' %>">
+                    <%= op.category.debit? ? '−' : '+' %><%= number_to_currency(op.amount, unit: "€", separator: ",", delimiter: " ", format: "%n %u") %>
+                  </span>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="4"><strong>Total général</strong></td>
+              <td class="text-right"><strong><%= number_to_currency(@total_debits + @total_credits, unit: "€", separator: ",", delimiter: " ", format: "%n %u") %></strong></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <%# Vue mobile en cartes %>
+      <div class="mobile-operation-cards">
+        <% @operations.each do |op| %>
+          <a href="<%= operation_path(op, from_extraction: request.fullpath) %>" class="mobile-op-card <%= op.category.debit? ? 'mobile-op-card-debit' : '' %>">
+            <div class="mobile-op-card-header">
+              <div>
+                <div class="mobile-op-card-cat"><%= op.category.name %></div>
+                <div class="mobile-op-card-sub"><%= op.subcategory.name %></div>
+              </div>
+              <span class="mobile-op-card-amount <%= op.category.debit? ? 'amount-debit' : 'amount-credit' %>">
+                <%= op.category.debit? ? '−' : '+' %><%= number_to_currency(op.amount, unit: "€", separator: ",", delimiter: " ", format: "%n %u") %>
+              </span>
+            </div>
+            <div class="mobile-op-card-footer">
+              <span class="mobile-op-card-date"><%= l(op.payment_date, format: :default) %></span>
+              <% if op.observation.present? %>
+                <span class="mobile-op-card-obs"><%= op.observation %></span>
+              <% end %>
+            </div>
+          </a>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="empty-state">
+        <p class="empty-state-title">Aucune opération trouvée</p>
+        <p class="empty-state-subtitle">Modifiez vos filtres pour obtenir des résultats</p>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Actions -->
+  <div class="show-actions no-print">
+    <button class="btn btn-primary" data-action="click->print#print">Imprimer</button>
+    <%= link_to "Nouvelle extraction", extractions_path, class: "btn btn-secondary" %>
+    <%= link_to "Accueil", root_path, class: "btn btn-secondary" %>
+  </div>
+</div>

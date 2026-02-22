@@ -1,0 +1,133 @@
+<div class="page-wrapper" data-controller="extraction-filter">
+  <h1>Extraction des comptes</h1>
+  <p class="page-subtitle">Filtrer et consulter les opérations</p>
+
+  <div class="card card-elevated">
+    <%= form_with(url: extractions_results_path, method: :get, class: "compta-form extraction-form") do |f| %>
+
+      <%# Année et Mois %>
+      <div class="filter-grid">
+        <div class="form-group">
+          <%= f.label :year, "Année", class: "form-label" %>
+          <%= f.select :year, @years.map { |y| [y, y] }, {}, class: "form-input" %>
+        </div>
+
+        <div class="form-group">
+          <span class="form-label">Mois</span>
+          <div class="checkbox-grid">
+            <label class="filter-checkbox">
+              <input type="checkbox" checked
+                     data-extraction-filter-target="allMonths"
+                     data-action="change->extraction-filter#toggleAllMonths">
+              <span>Tous les mois</span>
+            </label>
+            <% (1..12).each do |m| %>
+              <label class="filter-checkbox">
+                <input type="checkbox" name="months[]" value="<%= m %>"
+                       data-extraction-filter-target="month"
+                       data-action="change->extraction-filter#onMonthChange">
+                <span><%= I18n.l(Date.new(2024, m, 1), format: "%B").capitalize %></span>
+              </label>
+            <% end %>
+          </div>
+        </div>
+      </div>
+
+      <hr class="form-divider">
+
+      <%# PAVÉ DÉBITS %>
+      <div class="filter-section filter-section-debit">
+        <div class="filter-section-header">
+          <span class="operation-badge badge-debit">−</span>
+          <h2 class="filter-section-title">Dépenses</h2>
+        </div>
+
+        <% @categories.select(&:debit?).each do |cat| %>
+          <div class="filter-category-block" data-extraction-filter-target="categoryBlock" data-category-id="<%= cat.id %>">
+            <label class="filter-checkbox filter-checkbox-cat">
+              <input type="checkbox" name="category_ids[]" value="<%= cat.id %>"
+                     data-extraction-filter-target="category"
+                     data-action="change->extraction-filter#onCategoryChange"
+                     data-category-id="<%= cat.id %>">
+              <span class="filter-cat-name"><%= cat.name %></span>
+            </label>
+
+            <div class="filter-subcategories" data-extraction-filter-target="subcategoryGroup" data-category-id="<%= cat.id %>" style="display:none;">
+              <label class="filter-checkbox filter-checkbox-sub">
+                <input type="checkbox" checked
+                       data-extraction-filter-target="allSubs"
+                       data-category-id="<%= cat.id %>"
+                       data-action="change->extraction-filter#toggleAllSubs">
+                <span>Toutes les sous-catégories</span>
+              </label>
+              <% cat.subcategories.order(:name).each do |sub| %>
+                <label class="filter-checkbox filter-checkbox-sub">
+                  <input type="checkbox" name="subcategory_ids[]" value="<%= sub.id %>"
+                         data-extraction-filter-target="subcategory"
+                         data-category-id="<%= cat.id %>"
+                         data-action="change->extraction-filter#onSubcategoryChange">
+                  <span><%= sub.name %></span>
+                </label>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <hr class="form-divider">
+
+      <%# PAVÉ CRÉDITS %>
+      <div class="filter-section filter-section-credit">
+        <div class="filter-section-header">
+          <span class="operation-badge badge-credit">+</span>
+          <h2 class="filter-section-title">Revenus</h2>
+        </div>
+
+        <% @categories.select(&:credit?).each do |cat| %>
+          <div class="filter-category-block" data-extraction-filter-target="categoryBlock" data-category-id="<%= cat.id %>">
+            <label class="filter-checkbox filter-checkbox-cat">
+              <input type="checkbox" name="category_ids[]" value="<%= cat.id %>"
+                     data-extraction-filter-target="category"
+                     data-action="change->extraction-filter#onCategoryChange"
+                     data-category-id="<%= cat.id %>">
+              <span class="filter-cat-name"><%= cat.name %></span>
+            </label>
+
+            <div class="filter-subcategories" data-extraction-filter-target="subcategoryGroup" data-category-id="<%= cat.id %>" style="display:none;">
+              <label class="filter-checkbox filter-checkbox-sub">
+                <input type="checkbox" checked
+                       data-extraction-filter-target="allSubs"
+                       data-category-id="<%= cat.id %>"
+                       data-action="change->extraction-filter#toggleAllSubs">
+                <span>Toutes les sous-catégories</span>
+              </label>
+              <% cat.subcategories.order(:name).each do |sub| %>
+                <label class="filter-checkbox filter-checkbox-sub">
+                  <input type="checkbox" name="subcategory_ids[]" value="<%= sub.id %>"
+                         data-extraction-filter-target="subcategory"
+                         data-category-id="<%= cat.id %>"
+                         data-action="change->extraction-filter#onSubcategoryChange">
+                  <span><%= sub.name %></span>
+                </label>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <hr class="form-divider">
+
+      <p class="form-hint" style="text-align:center; margin-bottom:1rem;">
+        Si aucune catégorie n'est cochée, toutes les opérations seront affichées.
+      </p>
+
+      <div class="form-actions">
+        <%= f.submit "Extraire", class: "btn btn-primary btn-full" %>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="back-link">
+    <%= link_to "← Retour à l'accueil", root_path %>
+  </div>
+</div>
