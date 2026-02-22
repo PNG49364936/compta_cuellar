@@ -1,20 +1,23 @@
 # Home Compta
 
-Application Rails de gestion comptable domestique avec formulaire de saisie de données et possibilité de générer, afficher et imprimer des états comptables. Sauvegarde en base de données. L'application devra être responsive (tablette et mobile).
+Application Rails de gestion comptable domestique avec formulaire de saisie de données et possibilité de générer, afficher et imprimer des états comptables. Sauvegarde en base de données. L'application est responsive (tablette et mobile).
 
 ## Technologies
 
 - Rails 7.1.6
 - Ruby 3.2.2
-- PostgreSQL
-- Hotwire
-- Tailwind CSS
-- Stimulus (si nécessaire)
-- Déploiement via Render
+- SQLite (développement) — migration vers PostgreSQL/Neon prévue pour déploiement Render
+- Hotwire (Turbo + Stimulus)
+- Tailwind CSS v4 (via tailwindcss-rails)
+- Importmap (pas de Node.js/npm)
+- Devise 5.0.2 (authentification)
+- Déploiement prévu via Render
 
 ## Authentification
 
-L'application est mono-utilisateur. Authentification simple avec Devise (un seul compte, pas d'inscription publique). Le compte administrateur sera créé via `seeds.rb` (email et mot de passe par défaut à définir).
+L'application est mono-utilisateur. Authentification avec Devise (un seul compte, pas d'inscription publique — :registerable désactivé). Le compte administrateur est créé via `seeds.rb` :
+- Email : pngauthier@hotmail.fr
+- Mot de passe : Alba2023@@@
 
 ## Devise monétaire
 
@@ -52,89 +55,103 @@ Sous-catégories : Pensión, Transferencias, Otros ingresos.
 ## Modèle de données
 
 - **User** : email, mot de passe (géré par Devise).
-- **Category** : nom (string), type d'opération (débit ou crédit).
-- **Subcategory** : nom (string), référence vers Category (`belongs_to :category`).
-- **Operation** : montant (decimal, précision 2), date de paiement (date), observation (string, 80 caractères max), date de création (timestamp automatique), référence vers Category (`belongs_to :category`), référence vers Subcategory (`belongs_to :subcategory`).
+- **Category** : nom (string), type d'opération (debit ou credit). Scopes : `debits`, `credits`. Méthodes : `debit?`, `credit?`.
+- **Subcategory** : nom (string), référence vers Category (`belongs_to :category`). Suppression protégée si opérations rattachées.
+- **Operation** : montant (decimal, precision 10, scale 2), date de paiement (date), observation (string, 80 caractères max), timestamps. `belongs_to :category`, `belongs_to :subcategory`. `default_scope { order(payment_date: :desc) }`. Méthode `signed_amount`.
 
 ---
 
 ## Seed (données pré-chargées)
 
-Le fichier `db/seeds.rb` devra créer :
+Le fichier `db/seeds.rb` crée :
 
-1. Le compte utilisateur par défaut (email / mot de passe à définir).
-2. Les 5 catégories listées ci-dessus avec leur type (débit ou crédit).
-3. Toutes les sous-catégories associées à chaque catégorie.
+1. Le compte utilisateur (pngauthier@hotmail.fr / Alba2023@@@).
+2. Les 5 catégories avec leur type (debit ou credit).
+3. Les 26 sous-catégories associées.
 
----
-
-## Landing page
-
-- Bouton vers le formulaire de saisie des dépenses / ingresos.
-- Bouton vers le formulaire de création de nouvelles catégories et sous-catégories (voir section dédiée ci-dessous).
-- Bouton vers le formulaire d'extraction de comptes (dépenses ou ingresos).
-- Affichage des 10 dernières opérations créées (catégorie, sous-catégorie, montant, date de paiement, observation).
-- Affichage du **solde global** (total crédits − total débits).
+Utilise `find_or_create_by!` pour être idempotent.
 
 ---
 
-## Formulaire de création de catégories et sous-catégories
+## Structure des pages
 
-Ce formulaire permet d'ajouter de nouvelles catégories ou sous-catégories.
+### Landing page (DashboardController#index)
 
-Champs :
-- **Catégorie** : nom de la catégorie (texte).
-- **Sous-catégorie** : nom de la sous-catégorie (texte), rattachée à une catégorie existante (menu déroulant).
-- **Type** : choix entre « Dépense » (débit) et « Ingresos » (crédit).
-- **Commentaire** : champ texte libre.
+- Solde global (total crédits − total débits) avec montants DM Mono.
+- 3 boutons d'action : Nouvelle opération, Catégories, Comptes.
+- 10 dernières opérations (catégorie, sous-catégorie, montant, date).
 
-Les catégories et sous-catégories peuvent être **modifiées** ou **supprimées** uniquement si aucune opération n'y est rattachée. Si des opérations existent, afficher un message d'erreur explicite.
+### Formulaire de création de catégories et sous-catégories (CategoriesController)
+
+- Liste des catégories regroupées par type (débit/crédit) avec sous-catégories en pills.
+- Ajout de catégorie inline (nom + type).
+- Ajout de sous-catégorie inline sous chaque catégorie.
+- Suppression protégée : impossible si des opérations sont rattachées (message d'erreur explicite).
+
+### Formulaire de création d'une opération (OperationsController)
+
+- **Catégorie** : menu déroulant.
+- **Sous-catégorie** : menu déroulant dynamique via Stimulus (`subcategory_select_controller.js`), rechargé via fetch `/subcategories_for_category/:id`.
+- **Montant** : champ numérique (DM Mono).
+- **Date de paiement** : champ date (défaut = aujourd'hui).
+- **Observation** : texte libre (80 caractères max).
+- Après création → page show avec boutons : Nouvelle opération, Modifier, Supprimer (avec confirmation), Retour extraction (si vient de l'extraction), Accueil.
+
+### Extraction des comptes (ExtractionsController)
+
+**Formulaire de filtres (method: GET pour compatibilité Turbo) :**
+- **Année** : menu déroulant.
+- **Mois** : cases à cocher avec "Tous les mois" (coché par défaut). Géré par Stimulus (`extraction_filter_controller.js`).
+- **Catégories** : séparées en deux pavés visuels :
+  - **Pavé Dépenses** (bordure gauche rouge) : Piso, Cochera, Madre, Residencia.
+  - **Pavé Revenus** (bordure gauche verte) : Ingresos.
+- **Sous-catégories** : apparaissent dynamiquement sous chaque catégorie cochée, avec "Toutes les sous-catégories" coché par défaut.
+- Si aucune catégorie cochée → toutes les opérations affichées.
+
+**Résultats :**
+- Résumé : total débits, total crédits, solde.
+- Total par catégorie.
+- Total par mois.
+- Tableau des opérations (desktop) / Cartes (mobile) — cliquables vers le détail.
+- Bouton « Imprimer » (Stimulus `print_controller.js`).
+- Bouton « Retour à l'extraction » sur la page détail (paramètre `from_extraction` dans l'URL).
 
 ---
 
-## Formulaire de création d'une opération (dépense / ingreso)
+## Design system
 
-- **Catégorie** : menu déroulant. Si « Ingresos » est sélectionné, l'opération est automatiquement un crédit (+), sinon un débit (−).
-- **Sous-catégorie** : menu déroulant dépendant de la catégorie sélectionnée (relation parent-enfant, rechargement dynamique via Hotwire/Stimulus).
-- **Montant** : champ numérique (décimal, 2 chiffres après la virgule).
-- **Date de paiement** : champ date.
-- **Observation** : champ texte (80 caractères maximum).
-- **Bouton de validation**.
+Design identique au projet `/Users/pierrenoelgauthier/documents/png/check_my_tension`.
 
-Comportement :
-- La **date de création** est enregistrée automatiquement.
-- Chaque enregistrement est classé en base de données par **date de paiement**.
-- Après création, affichage de la fiche de l'opération (page show) avec les boutons suivants :
-  - « Nouvelle opération » (retour au formulaire de saisie vierge).
-  - « Modifier » (édition de l'opération).
-  - « Supprimer » (avec confirmation avant suppression).
-  - « Accueil » (retour à la landing page).
+- **Palette** : forest (#1a3a2e), sage (#7aad8f), cream (#f7f3ec), coral (#e05c4b), amber (#d4933a).
+- **Typographie** : Playfair Display (titres), Source Serif 4 (texte), DM Mono (montants).
+- **Composants** : cards avec shadow, badges débit/crédit, boutons avec hover elevation, flash messages stylisés, animations fadeUp/slideDown, texture grain SVG.
+- **CSS** : fichier `app/assets/stylesheets/custom.css` (~700 lignes).
+
+## Responsive
+
+- **Mobile (≤768px)** : menu hamburger (Stimulus `mobile_nav_controller.js`), grids en 1 colonne, tableau extraction remplacé par cartes, zones tactiles checkboxes agrandies.
+- **Petit mobile (≤480px)** : padding réduit, boutons pleine largeur empilés, solde compact.
+- **Print** : masque header/nav/boutons, fond blanc, couleurs débit/crédit préservées.
+
+## Stimulus controllers
+
+- `subcategory_select_controller.js` : rechargement dynamique des sous-catégories dans le formulaire opération.
+- `extraction_filter_controller.js` : gestion des cases à cocher mois/catégories/sous-catégories dans l'extraction.
+- `print_controller.js` : impression via `window.print()`.
+- `mobile_nav_controller.js` : menu hamburger mobile.
+
+## Routes principales
+
+```
+root → dashboard#index
+resources :operations (CRUD complet)
+resources :categories (CRUD) avec nested subcategories (create, destroy)
+get extractions → extractions#index
+get extractions/results → extractions#results
+get subcategories_for_category/:category_id → subcategories#for_category (JSON)
+devise_for :users
+```
 
 ---
-
-## Affichage / extraction des comptes
-
-L'utilisateur dispose de **filtres combinables** pour consulter les opérations :
-
-- **Année** : menu déroulant (sélection obligatoire). Les années sont générées dynamiquement à partir des opérations existantes en base.
-- **Mois** : possibilité de sélectionner un seul mois ou plusieurs mois au sein de l'année choisie.
-- **Catégorie** : possibilité de sélectionner une ou plusieurs catégories.
-- **Sous-catégorie** : possibilité de sélectionner une ou plusieurs sous-catégories.
-
-> **Toutes les combinaisons de filtres doivent être possibles.**
-
-### Rendu de l'extraction
-
-- Présentation sous forme de **tableau HTML structuré** (style tableur amélioré avec Tailwind CSS).
-- Chaque ligne du tableau est **cliquable** pour afficher le détail complet de l'opération.
-- Le tableau affiche :
-  - **Total par catégorie**.
-  - **Total par mois**.
-  - **Total général**.
-  - **Solde** (crédits − débits) pour la période filtrée.
-- Bouton **« Imprimer »** (impression via le navigateur).
-
-#### Front-end
-Design : appliquer design front-end identique à /Users/pierrenoelgauthier/documents/png/check_my_tension
 
 Ne pas faire de commit GIT
