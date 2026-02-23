@@ -1,7 +1,7 @@
 class ExtractionsController < ApplicationController
   def index
     @categories = Category.includes(:subcategories).order(:operation_type, :name)
-    @years = Operation.unscoped.distinct.pluck(Arel.sql("strftime('%Y', payment_date)")).compact.sort.reverse
+    @years = Operation.unscoped.pluck(:payment_date).compact.map { |d| d.year.to_s }.uniq.sort.reverse
     @years = [Date.current.year.to_s] if @years.empty?
   end
 
@@ -11,11 +11,16 @@ class ExtractionsController < ApplicationController
     @category_ids = (params[:category_ids] || []).reject(&:blank?)
     @subcategory_ids = (params[:subcategory_ids] || []).reject(&:blank?)
 
+    year_start = Date.new(@year.to_i, 1, 1)
+    year_end = Date.new(@year.to_i, 12, 31)
 
     @operations = Operation.unscoped.includes(:category, :subcategory)
-                           .where("strftime('%Y', payment_date) = ?", @year)
+                           .where(payment_date: year_start..year_end)
 
-    @operations = @operations.where("CAST(strftime('%m', payment_date) AS INTEGER) IN (?)", @months.map(&:to_i)) if @months.any?
+    if @months.any?
+      month_ints = @months.map(&:to_i)
+      @operations = @operations.where(extract_month_sql, *month_ints)
+    end
     @operations = @operations.where(category_id: @category_ids) if @category_ids.any?
     @operations = @operations.where(subcategory_id: @subcategory_ids) if @subcategory_ids.any?
 
@@ -29,11 +34,33 @@ class ExtractionsController < ApplicationController
                                       .group("categories.name")
                                       .sum(:amount)
 
-    @totals_by_month = @operations.group(Arel.sql("CAST(strftime('%m', payment_date) AS INTEGER)"))
+    @totals_by_month = @operations.group(Arel.sql(extract_month_expr))
                                    .sum(:amount)
 
     @categories = Category.includes(:subcategories).order(:operation_type, :name)
-    @years = Operation.unscoped.distinct.pluck(Arel.sql("strftime('%Y', payment_date)")).compact.sort.reverse
+    @years = Operation.unscoped.pluck(:payment_date).compact.map { |d| d.year.to_s }.uniq.sort.reverse
     @years = [Date.current.year.to_s] if @years.empty?
+  end
+
+  private
+
+  def sqlite?
+    ActiveRecord::Base.connection.adapter_name.downcase.include?("sqlite")
+  end
+
+  def extract_month_expr
+    if sqlite?
+      "CAST(strftime('%m', payment_date) AS INTEGER)"
+    else
+      "EXTRACT(MONTH FROM payment_date)::integer"
+    end
+  end
+
+  def extract_month_sql
+    if sqlite?
+      "CAST(strftime('%m', payment_date) AS INTEGER) IN (#{Array.new(@months.size, '?').join(', ')})"
+    else
+      "EXTRACT(MONTH FROM payment_date)::integer IN (#{Array.new(@months.size, '?').join(', ')})"
+    end
   end
 end
