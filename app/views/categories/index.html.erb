@@ -27,7 +27,7 @@
     <div class="card category-card" style="animation-delay: <%= i * 0.05 %>s">
       <div class="category-header">
         <div class="category-title-group">
-          <span class="operation-badge badge-debit">Dépense</span>
+          <span class="operation-badge-lg badge-debit">Dépense</span>
           <h3><%= cat.name %></h3>
         </div>
         <div class="category-actions">
@@ -61,7 +61,7 @@
     <div class="card category-card" style="animation-delay: <%= (i + Category.debits.count) * 0.05 %>s">
       <div class="category-header">
         <div class="category-title-group">
-          <span class="operation-badge badge-credit">Revenu</span>
+          <span class="operation-badge-lg badge-credit">Revenu</span>
           <h3><%= cat.name %></h3>
         </div>
         <div class="category-actions">
