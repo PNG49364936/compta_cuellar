@@ -26,16 +26,18 @@ class ExtractionsController < ApplicationController
 
     @operations = @operations.order(payment_date: :asc)
 
-    @total_debits = @operations.joins(:category).where(categories: { operation_type: "debit" }).sum(:amount)
-    @total_credits = @operations.joins(:category).where(categories: { operation_type: "credit" }).sum(:amount)
+    base = @operations.reorder(nil)
+
+    @total_debits = base.joins(:category).where(categories: { operation_type: "debit" }).sum(:amount)
+    @total_credits = base.joins(:category).where(categories: { operation_type: "credit" }).sum(:amount)
     @solde = @total_credits - @total_debits
 
-    @totals_by_category = @operations.joins(:category)
-                                      .group("categories.name")
-                                      .sum(:amount)
+    @totals_by_category = base.joins(:category)
+                               .group("categories.name")
+                               .sum(:amount)
 
-    @totals_by_month = @operations.group(Arel.sql(extract_month_expr))
-                                   .sum(:amount)
+    @totals_by_month = base.group(Arel.sql(extract_month_expr))
+                            .sum(:amount)
 
     @categories = Category.includes(:subcategories).order(:operation_type, :name)
     @years = Operation.unscoped.pluck(:payment_date).compact.map { |d| d.year.to_s }.uniq.sort.reverse
