@@ -6,12 +6,13 @@ Application Rails de gestion comptable domestique avec formulaire de saisie de d
 
 - Rails 7.1.6
 - Ruby 3.2.2
-- SQLite (développement) — migration vers PostgreSQL/Neon prévue pour déploiement Render
+- SQLite (développement) / PostgreSQL via Neon (production)
 - Hotwire (Turbo + Stimulus)
 - Tailwind CSS v4 (via tailwindcss-rails)
 - Importmap (pas de Node.js/npm)
 - Devise 5.0.2 (authentification)
-- Déploiement prévu via Render
+- Déploiement : Render (free tier) + Neon (PostgreSQL serverless free tier)
+- UptimeRobot : ping toutes les 5 min sur `/up` pour éviter le sleep Render
 
 ## Authentification
 
@@ -125,7 +126,7 @@ Design identique au projet `/Users/pierrenoelgauthier/documents/png/check_my_ten
 - **Palette** : forest (#1a3a2e), sage (#7aad8f), cream (#f7f3ec), coral (#e05c4b), amber (#d4933a).
 - **Typographie** : Playfair Display (titres), Source Serif 4 (texte), DM Mono (montants).
 - **Composants** : cards avec shadow, badges débit/crédit, boutons avec hover elevation, flash messages stylisés, animations fadeUp/slideDown, texture grain SVG.
-- **CSS** : fichier `app/assets/stylesheets/custom.css` (~700 lignes).
+- **CSS** : fichier `app/assets/stylesheets/custom.css` (~1574 lignes).
 
 ## Responsive
 
@@ -151,6 +152,22 @@ get extractions/results → extractions#results
 get subcategories_for_category/:category_id → subcategories#for_category (JSON)
 devise_for :users
 ```
+
+---
+
+## Déploiement
+
+- **URL production** : https://home-compta.onrender.com
+- **Render** : Web Service free tier, blueprint via `render.yaml`
+- **Neon** : PostgreSQL serverless (region US East)
+- **Build script** : `bin/render-build.sh` (bundle, assets, migrate, seed si base vide)
+- **Fichiers de déploiement** : `render.yaml`, `bin/render-build.sh`
+- **Variables d'environnement Render** : `DATABASE_URL`, `RAILS_MASTER_KEY`, `RAILS_ENV`, `WEB_CONCURRENCY`
+- **UptimeRobot** : monitor HTTP(s) sur `https://home-compta.onrender.com/up` (intervalle 5 min)
+
+### Compatibilité SQLite/PostgreSQL
+
+Le code est compatible les deux bases. `ExtractionsController` utilise des helpers privés (`sqlite?`, `extract_month_expr`, `extract_month_sql`) pour adapter les fonctions de date selon l'adaptateur. Les agrégations utilisent `.reorder(nil)` pour éviter les `PG::GroupingError` causés par le `default_scope` d'Operation.
 
 ---
 

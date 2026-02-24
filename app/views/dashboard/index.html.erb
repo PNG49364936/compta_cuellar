@@ -39,6 +39,11 @@
       <div class="action-title">Comptes</div>
       <div class="action-desc">Consulter et imprimer les extractions</div>
     <% end %>
+    <%= link_to export_csv_path, class: "action-card", data: { turbo: false } do %>
+      <div class="action-icon">&#128190;</div>
+      <div class="action-title">Exporter</div>
+      <div class="action-desc">Sauvegarder toutes les opérations en CSV</div>
+    <% end %>
   </div>
 
   <!-- 10 dernières opérations -->

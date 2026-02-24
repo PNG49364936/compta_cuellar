@@ -8,6 +8,7 @@ Rails.application.routes.draw do
     resources :subcategories, only: [:create, :destroy]
   end
 
+  get "export_csv", to: "exports#csv", as: :export_csv
   get "extractions", to: "extractions#index"
   get "extractions/results", to: "extractions#results"
 
