@@ -176,3 +176,4 @@ Ne pas faire de commit GIT
 Ne pas détruire :
 psql 'postgresql://neondb_owner:npg_mKvf7whIEoJ6@ep-royal-rain-aiapg7c7-pooler.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require'
 ----------------------------------------------------------------------------------
+bien utiliser en production
