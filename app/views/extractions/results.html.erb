@@ -32,7 +32,7 @@
         <% @totals_by_category.each do |cat_name, total| %>
           <div class="total-card">
             <span class="total-cat-name"><%= cat_name %></span>
-            <span class="total-cat-value"><%= number_to_currency(total, unit: "€", separator: ",", delimiter: " ", format: "%n %u") %></span>
+            <span class="total-cat-value <%= total >= 0 ? 'amount-credit' : 'amount-debit' %>"><%= total >= 0 ? '+' : '−' %><%= number_to_currency(total.abs, unit: "€", separator: ",", delimiter: " ", format: "%n %u") %></span>
           </div>
         <% end %>
       </div>
@@ -47,7 +47,7 @@
         <% @totals_by_month.sort.each do |month_num, total| %>
           <div class="total-card">
             <span class="total-cat-name"><%= I18n.l(Date.new(@year.to_i, month_num.to_i, 1), format: "%B").capitalize %></span>
-            <span class="total-cat-value"><%= number_to_currency(total, unit: "€", separator: ",", delimiter: " ", format: "%n %u") %></span>
+            <span class="total-cat-value <%= total >= 0 ? 'solde-positive' : 'solde-negative' %>"><%= total >= 0 ? '+' : '−' %><%= number_to_currency(total.abs, unit: "€", separator: ",", delimiter: " ", format: "%n %u") %></span>
           </div>
         <% end %>
       </div>
@@ -88,7 +88,7 @@
           <tfoot>
             <tr>
               <td colspan="4"><strong>Total général</strong></td>
-              <td class="text-right"><strong><%= number_to_currency(@total_debits + @total_credits, unit: "€", separator: ",", delimiter: " ", format: "%n %u") %></strong></td>
+              <td class="text-right"><strong class="<%= @solde >= 0 ? 'solde-positive' : 'solde-negative' %>"><%= @solde >= 0 ? '+' : '−' %><%= number_to_currency(@solde.abs, unit: "€", separator: ",", delimiter: " ", format: "%n %u") %></strong></td>
             </tr>
           </tfoot>
         </table>

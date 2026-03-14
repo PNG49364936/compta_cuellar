@@ -33,11 +33,19 @@ class ExtractionsController < ApplicationController
     @solde = @total_credits - @total_debits
 
     @totals_by_category = base.joins(:category)
-                               .group("categories.name")
+                               .group("categories.name", "categories.operation_type")
                                .sum(:amount)
+                               .each_with_object({}) do |((name, op_type), total), hash|
+                                 hash[name] = op_type == "debit" ? -total : total
+                               end
 
-    @totals_by_month = base.group(Arel.sql(extract_month_expr))
+    @totals_by_month = base.joins(:category)
+                            .group(Arel.sql(extract_month_expr), "categories.operation_type")
                             .sum(:amount)
+                            .each_with_object({}) do |((month, op_type), total), hash|
+                              hash[month] ||= 0
+                              hash[month] += op_type == "debit" ? -total : total
+                            end
 
     @categories = Category.includes(:subcategories).order(:operation_type, :name)
     @years = Operation.unscoped.pluck(:payment_date).compact.map { |d| d.year.to_s }.uniq.sort.reverse
